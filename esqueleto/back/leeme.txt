@@ -1,0 +1,9 @@
+This software needs Python 3.10 or higher!
+
+#### Install #####
+
+pip install "fastapi[all]"
+
+
+#### Run ####
+uvicorn main:app --reload

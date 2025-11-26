@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        width: 98%;
+        height: 95%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+    <title>RXDET FINAL PROJECT</title>
+  </head>
+  <body>
+    <div id="map"></div>
+    <!-- It is always a good idea to have different files for different purposes.--->
+    <script type="text/javascript"> 
+
+    const map = L.map('map')
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    map.setView([Choose a good point here], 4);
+
+    async function load_geom(){
+      let url = 'MY-NEW-CONFIGURED-URL';
+      const response = await fetch(url)
+      const my_geom = await response.json();
+      return my_geom;
+    }
+
+    async function main(){
+      const lugo_geom = await load_geom();
+      var lugo_layer = L.geoJson(lugo_geom);
+      map.addLayer(lugo_layer)
+    }
+
+    main();
+
+    </script>
+  </body>
+</html>
