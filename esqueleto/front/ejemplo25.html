@@ -29,6 +29,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     map.setView([Choose a good point here], 4);
 
+    // A PARTIR DE AQUI, MODIFICAR EL CÓDIGO
     async function load_geom(){
       let url = 'MY-NEW-CONFIGURED-URL';
       const response = await fetch(url)
