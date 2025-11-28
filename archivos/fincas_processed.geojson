@@ -1,5 +1,6 @@
 {
 "type": "FeatureCollection",
+"name": "fincas_processed",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
 { "type": "Feature", "properties": { "id": 1 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -7.343904, 43.251419 ], [ -7.343525, 43.251898 ], [ -7.342867, 43.251149 ], [ -7.342304, 43.25085 ], [ -7.342663, 43.250284 ], [ -7.343904, 43.251419 ] ] ] } },
