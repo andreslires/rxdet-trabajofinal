@@ -1,31 +1,31 @@
--- Vacas que se encuentran dentro de una finca específica
+select * from cows_pos cp;
 
+select * from fincas f;
+
+-- Vista 1: Vacas dentro de fincas
+CREATE OR REPLACE VIEW vacas_dentro AS
 SELECT 
-    c.*,
-    f.id as finca_id
-FROM cows_pos c
+    v.*,
+    f.id as finca_id,
+    f.geometry as finca_geom,
+    v.geometry as vaca_geom
+FROM cows_pos v
 INNER JOIN fincas f 
-    ON ST_Within(c.geometry, f.geometry);
+    ON ST_Within(v.geometry, f.geometry);
 
--- Vacas que se encuentran fuera de una finca específica
+select * from vacas_dentro;
+select count(*) from vacas_dentro;
 
--- Alternativa 1:
-
+-- Vista 2: Vacas fuera de fincas  
+CREATE OR REPLACE VIEW vacas_fuera AS
 SELECT 
-    c.*
-FROM cows_pos c
+    v.*,
+    v.geometry as geom
+FROM cows_pos v
 WHERE NOT EXISTS (
-    SELECT 1 
-    FROM fincas f 
-    WHERE ST_Within(c.geometry, f.geometry));
+    SELECT 1 FROM fincas f 
+    WHERE ST_Within(v.geometry, f.geometry)
+);
 
--- Alternativa 2:
-
-SELECT 
-    c.*
-FROM cows_pos c
-LEFT JOIN fincas f 
-    ON ST_Within(c.geometry, f.geometry)
-WHERE f.id IS NULL
-
--- Devuelven el mismo resultado (mismo número de filas) las 2 alternativas en DBeaver
+select * from vacas_fuera;
+select count(*) from vacas_fuera;
