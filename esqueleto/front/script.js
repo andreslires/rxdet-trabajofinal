@@ -2,37 +2,42 @@
 // *********************Capas base*********************************
 
 // OpenStreetMap
-var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+// Mapa satelite:
+var esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+
+// var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 
 // ****************************************************************
 // *********************Creación del mapa**************************
 
-var map = L.map('map'); map.setView(new L.LatLng(43.25, -7.34), 14);
+var map = L.map('map'); map.setView(new L.LatLng(43.25, -7.34), 15);
 
 // Capa por defecto: 
-map.addLayer(osmLayer);
+map.addLayer(esriSatLayer);
 
 
 // ****************************************************************
 // **************VACAS: Dentro y fuera de las fincas***************
 
+// Marcadores de vacas dentro y fuera de las fincas
+
 // Los datos se cargan conectandonos a GEOSERVER, que a su vez los obtiene de PostGIS
 var vacasfuera = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     layers: 'rxdet:vacas_fuera',
     format: 'image/png',
-    transparent: true
+    transparent: true,
 });
+
 var vacasdentro = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     layers: 'rxdet:vacas_dentro',
     format: 'image/png',
     transparent: true
 });
-map.addLayer(vacasfuera);
-map.addLayer(vacasdentro);
 
 
 // ****************************************************************
 // **************Overlays y controles******************************
+
 
 var overlayMaps = {
     "Vacas fuera de las fincas": vacasfuera,
@@ -40,7 +45,7 @@ var overlayMaps = {
 };
 
 // Control de capas
-var layerControl = L.control.layers(baseMaps, overlayMaps);
+var layerControl = L.control.layers(null, overlayMaps);
 map.addControl(layerControl);
 
 // Escala métrica
