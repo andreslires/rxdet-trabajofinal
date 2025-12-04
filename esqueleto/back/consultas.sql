@@ -17,11 +17,16 @@ select count(*) from vacas_dentro;
 CREATE OR REPLACE VIEW vacas_fuera AS
 SELECT 
     v.*,
+    v.geometry as geom
 FROM cows_pos v
 WHERE NOT EXISTS (
-    SELECT 1 FROM fincas f 
+    SELECT * FROM fincas f 
     WHERE ST_Within(v.geometry, f.geometry)
 );
 
 select * from vacas_fuera;
 select count(*) from vacas_fuera;
+
+-- Eliminar las vistas (si es necesario por algún motivo)
+drop view vacas_dentro;
+drop view vacas_fuera;
