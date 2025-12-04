@@ -5,10 +5,7 @@ select * from fincas f;
 -- Vista 1: Vacas dentro de fincas
 CREATE OR REPLACE VIEW vacas_dentro AS
 SELECT 
-    v.*,
-    f.id as finca_id,
-    f.geometry as finca_geom,
-    v.geometry as vaca_geom
+    v.*
 FROM cows_pos v
 INNER JOIN fincas f 
     ON ST_Within(v.geometry, f.geometry);
@@ -20,7 +17,6 @@ select count(*) from vacas_dentro;
 CREATE OR REPLACE VIEW vacas_fuera AS
 SELECT 
     v.*,
-    v.geometry as geom
 FROM cows_pos v
 WHERE NOT EXISTS (
     SELECT 1 FROM fincas f 
