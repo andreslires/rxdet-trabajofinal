@@ -1,119 +1,85 @@
-// ----------------------------------------------
-// CAPA BASE
-// ----------------------------------------------
-var esriSatLayer = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-);
+// Capa base
+var esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
 
+// Creación del mapa
 var map = L.map('map').setView([43.25, -7.34], 15);
 map.addLayer(esriSatLayer);
 
-// ----------------------------------------------
-// ICONOS SEGÚN ENUNCIADO
-// ----------------------------------------------
+// Variables para controlar capas
+var capaDentro = null;
+var capaFuera = null;
 
-// Punto blanco borde negro
-const iconDentro = L.divIcon({
-    className: "",
-    html: `<div style="
-        width:10px;
-        height:10px;
-        background:white;
-        border:3px solid black;
-        border-radius:50%;
-    "></div>`,
-    iconSize: [15, 15]
-});
-
-// Punto blanco borde rojo
-const iconFuera = L.divIcon({
-    className: "",
-    html: `<div style="
-        width:10px;
-        height:10px;
-        background:white;
-        border:3px solid red;
-        border-radius:50%;
-    "></div>`,
-    iconSize: [15, 15]
-});
-
-// ----------------------------------------------
-// FUNCIONES PARA PEDIR GEOJSON A GEOSERVER
-// ----------------------------------------------
-
-async function loadWFS(layerName) {
-    const url =
-        `http://localhost:8080/geoserver/RXDET/ows?` +
-        `service=WFS&version=1.0.0&request=GetFeature&` +
-        `typeName=RXDET:${layerName}&outputFormat=application/json`;
-
+// Función para cargar datos desde GeoServer
+async function cargarVacas(tipo) {
+    const url = `http://localhost:8080/geoserver/RXDET/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=RXDET:vacas_${tipo}&outputFormat=application/json`;
+    
     const response = await fetch(url);
-    const geojson = await response.json();
-    return geojson;
-}
-
-// Carga de capa Vacas Dentro
-async function capaVacasDentro() {
-    const data = await loadWFS("vacas_dentro");
-
+    const data = await response.json();
+    
+    const color = tipo === 'dentro' ? 'black' : 'red';
+    
     return L.geoJSON(data, {
-        pointToLayer: (feature, latlng) =>
-            L.marker(latlng, { icon: iconDentro })
+        pointToLayer: function(feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 4,
+                fillColor: "white",
+                color: color,
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            });
+        }
     });
 }
 
-// Carga de capa Vacas Fuera
-async function capaVacasFuera() {
-    const data = await loadWFS("vacas_fuera");
-
-    return L.geoJSON(data, {
-        pointToLayer: (feature, latlng) =>
-            L.marker(latlng, { icon: iconFuera })
-    });
+// Funciones para mostrar/ocultar capas (toggle)
+async function toggleVacasDentro() {
+    if (!capaDentro) {
+        capaDentro = await cargarVacas('dentro');
+    }
+    
+    if (map.hasLayer(capaDentro)) {
+        map.removeLayer(capaDentro);
+    } else {
+        capaDentro.addTo(map);
+    }
+    ajustarVista();
 }
 
-// ----------------------------------------------
-// CONTROL DE CAPAS CON REFERENCIA GLOBAL
-// ----------------------------------------------
-
-let layerDentro = null;
-let layerFuera = null;
-
-// Botón Vacas Dentro
-document.getElementById("btnDentro").onclick = async () => {
-    if (!layerDentro) {
-        layerDentro = await capaVacasDentro();
+async function toggleVacasFuera() {
+    if (!capaFuera) {
+        capaFuera = await cargarVacas('fuera');
     }
     
-    // Si la capa ya está en el mapa y se pincha, la quitamos (toggle)
-    if (map.hasLayer(layerDentro)) {
-        map.removeLayer(layerDentro);
+    if (map.hasLayer(capaFuera)) {
+        map.removeLayer(capaFuera);
     } else {
-        layerDentro.addTo(map);
+        capaFuera.addTo(map);
     }
-};
+    ajustarVista();
+}
 
-// Botón Vacas Fuera
-document.getElementById("btnFuera").onclick = async () => {
-    if (!layerFuera) {
-        layerFuera = await capaVacasFuera();
-    }
+function limpiarMapa() {
+    if (capaDentro && map.hasLayer(capaDentro)) map.removeLayer(capaDentro);
+    if (capaFuera && map.hasLayer(capaFuera)) map.removeLayer(capaFuera);
+}
+
+// Ajustar vista para mostrar todas las capas visibles
+function ajustarVista() {
+    const group = new L.FeatureGroup();
     
-    // Si la capa ya está en el mapa y se pincha, la quitamos (toggle)
-    if (map.hasLayer(layerFuera)) {
-        map.removeLayer(layerFuera);
-    } else {
-        layerFuera.addTo(map);
+    if (capaDentro && map.hasLayer(capaDentro)) group.addLayer(capaDentro);
+    if (capaFuera && map.hasLayer(capaFuera)) group.addLayer(capaFuera);
+    
+    if (group.getLayers().length > 0) {
+        map.fitBounds(group.getBounds());
     }
-};
+}
 
-// Botón Limpiar Capas
-document.getElementById("btnLimpiar").onclick = () => {
-    if (layerDentro && map.hasLayer(layerDentro)) {
-        map.removeLayer(layerDentro);
-    }
-    if (layerFuera && map.hasLayer(layerFuera)) {
-        map.removeLayer(layerFuera);
-    }
-};
+// Eventos de botones
+document.getElementById('btnDentro').addEventListener('click', toggleVacasDentro);
+document.getElementById('btnFuera').addEventListener('click', toggleVacasFuera);
+document.getElementById('btnLimpiar').addEventListener('click', limpiarMapa);
+
+// Escala métrica
+L.control.scale({ imperial: false }).addTo(map);
