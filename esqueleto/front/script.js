@@ -1,53 +1,119 @@
-// ****************************************************************
-// *********************Capas base*********************************
+// ----------------------------------------------
+// CAPA BASE
+// ----------------------------------------------
+var esriSatLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+);
 
-// OpenStreetMap
-// Mapa satelite:
-var esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
-
-// var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
-// ****************************************************************
-// *********************Creación del mapa**************************
-
-var map = L.map('map'); map.setView(new L.LatLng(43.25, -7.34), 15);
-
-// Capa por defecto: 
+var map = L.map('map').setView([43.25, -7.34], 15);
 map.addLayer(esriSatLayer);
 
+// ----------------------------------------------
+// ICONOS SEGÚN ENUNCIADO
+// ----------------------------------------------
 
-// ****************************************************************
-// **************VACAS: Dentro y fuera de las fincas***************
-
-// Marcadores de vacas dentro y fuera de las fincas
-
-// Los datos se cargan conectandonos a GEOSERVER, que a su vez los obtiene de PostGIS
-var vacasfuera = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
-    layers: 'rxdet:vacas_fuera',
-    format: 'image/png',
-    transparent: true,
+// Punto blanco borde negro
+const iconDentro = L.divIcon({
+    className: "",
+    html: `<div style="
+        width:10px;
+        height:10px;
+        background:white;
+        border:3px solid black;
+        border-radius:50%;
+    "></div>`,
+    iconSize: [15, 15]
 });
 
-var vacasdentro = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
-    layers: 'rxdet:vacas_dentro',
-    format: 'image/png',
-    transparent: true
+// Punto blanco borde rojo
+const iconFuera = L.divIcon({
+    className: "",
+    html: `<div style="
+        width:10px;
+        height:10px;
+        background:white;
+        border:3px solid red;
+        border-radius:50%;
+    "></div>`,
+    iconSize: [15, 15]
 });
 
+// ----------------------------------------------
+// FUNCIONES PARA PEDIR GEOJSON A GEOSERVER
+// ----------------------------------------------
 
-// ****************************************************************
-// **************Overlays y controles******************************
+async function loadWFS(layerName) {
+    const url =
+        `http://localhost:8080/geoserver/RXDET/ows?` +
+        `service=WFS&version=1.0.0&request=GetFeature&` +
+        `typeName=RXDET:${layerName}&outputFormat=application/json`;
 
+    const response = await fetch(url);
+    const geojson = await response.json();
+    return geojson;
+}
 
-var overlayMaps = {
-    "Vacas fuera de las fincas": vacasfuera,
-    "Vacas dentro de las fincas": vacasdentro
+// Carga de capa Vacas Dentro
+async function capaVacasDentro() {
+    const data = await loadWFS("vacas_dentro");
+
+    return L.geoJSON(data, {
+        pointToLayer: (feature, latlng) =>
+            L.marker(latlng, { icon: iconDentro })
+    });
+}
+
+// Carga de capa Vacas Fuera
+async function capaVacasFuera() {
+    const data = await loadWFS("vacas_fuera");
+
+    return L.geoJSON(data, {
+        pointToLayer: (feature, latlng) =>
+            L.marker(latlng, { icon: iconFuera })
+    });
+}
+
+// ----------------------------------------------
+// CONTROL DE CAPAS CON REFERENCIA GLOBAL
+// ----------------------------------------------
+
+let layerDentro = null;
+let layerFuera = null;
+
+// Botón Vacas Dentro
+document.getElementById("btnDentro").onclick = async () => {
+    if (!layerDentro) {
+        layerDentro = await capaVacasDentro();
+    }
+    
+    // Si la capa ya está en el mapa y se pincha, la quitamos (toggle)
+    if (map.hasLayer(layerDentro)) {
+        map.removeLayer(layerDentro);
+    } else {
+        layerDentro.addTo(map);
+    }
 };
 
-// Control de capas
-var layerControl = L.control.layers(null, overlayMaps);
-map.addControl(layerControl);
+// Botón Vacas Fuera
+document.getElementById("btnFuera").onclick = async () => {
+    if (!layerFuera) {
+        layerFuera = await capaVacasFuera();
+    }
+    
+    // Si la capa ya está en el mapa y se pincha, la quitamos (toggle)
+    if (map.hasLayer(layerFuera)) {
+        map.removeLayer(layerFuera);
+    } else {
+        layerFuera.addTo(map);
+    }
+};
 
-// Escala métrica
-var scaleControl = L.control.scale({ imperial: false });
-map.addControl(scaleControl);
+// Botón Limpiar Capas
+document.getElementById("btnLimpiar").onclick = () => {
+    if (layerDentro && map.hasLayer(layerDentro)) {
+        map.removeLayer(layerDentro);
+    }
+    if (layerFuera && map.hasLayer(layerFuera)) {
+        map.removeLayer(layerFuera);
+    }
+};

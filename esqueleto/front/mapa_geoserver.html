@@ -10,14 +10,49 @@
     <link rel="stylesheet" type="text/css" href="estilo.css"/>
 
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
 
     <title>Mapa de control de vacas</title>
+
+    <style>
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+      #panel {
+        background: #f8f9fa;
+        border-right: 2px solid #ccc;
+        padding: 15px;
+        height: 100%;
+      }
+    </style>
+
   </head>
-  <body>
-    &nbsp; <!-- Para que haya algo de contenido en el body -->
-    <div id="map"></div>
+
+  <body class="h-100">
+
+    <div class="container-fluid h-100">
+      <div class="row h-100">
+
+        <!-- PANEL LATERAL -->
+        <div id="panel" class="col-3">
+
+          <h4>Consultas</h4>
+          <button id="btnDentro" class="btn btn-dark w-100 mb-2">Vacas dentro</button>
+          <button id="btnFuera" class="btn btn-danger w-100 mb-2">Vacas fuera</button>
+          <button id="btnLimpiar" class="btn btn-secondary w-100 mb-2">Limpiar capas</button>
+
+        </div>
+
+        <!-- MAPA -->
+        <div class="col-9 p-0">
+          &nbsp;
+          <div id="map"></div>
+        </div>
+
+      </div>
+    </div>
+
     <script src="script.js"></script> 
   </body>
 </html>
-
