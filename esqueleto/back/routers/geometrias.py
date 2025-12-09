@@ -8,16 +8,23 @@ router = APIRouter(prefix="/geoms",
                     responses={404: {"message":"Error in my geoms"}})
 
 #Connecting the databse
-engine = create_engine('CONNECT TO THE RXDET DATABASE') #!CAMBIAR PARA CONECTAR A LA BASE DE DATOS RXDET
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres')
 conn = engine.connect()
 
 if not database_exists(engine.url):
     create_database(engine.url)
 
 #Defining what happens when you request http://localhost:8000/geoms
-@router.get("/")
+@router.get("/vacas_dentro")
 async def geoms(): 
-    sql = "GIVE ME THE LUGO GEOMETRY IN 4326" #!DEFINIR LA CONSULTA SQL
+    sql = "SELECT vacas_dentro.geom FROM vacas_dentro"
+    geodf = gpd.read_postgis(text(sql), conn) 
+    json_str = geodf.to_json() 
+    return Response(content=json_str, media_type='application/json')
+
+@router.get("/vacas_fuera")
+async def geoms(): 
+    sql = "SELECT vacas_fuera.geom FROM vacas_fuera"
     geodf = gpd.read_postgis(text(sql), conn) 
     json_str = geodf.to_json() 
     return Response(content=json_str, media_type='application/json')

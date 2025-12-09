@@ -75,7 +75,7 @@ Como se aprecia en las consultas, se utiliza la función espacial *ST_Within* y 
 
 Para publicar las vistas creadas en PostGIS en GeoServer, se siguieron los siguientes pasos:
 
-1. **Acceso a GeoServer**: A través de la terminal, se activó el ejecutable *startup.sh de GeoServer* y se accedió a la interfaz web mediante un navegador, utilizando la URL `http://localhost:8080/geoserver`. Una vez dentro, se inició sesión con las credenciales por defecto (usuario: *admin*, contraseña: *geoserver*).
+1. **Acceso a GeoServer**: A través de la terminal, se activó el ejecutable *startup.sh de GeoServer* (en el caso de MacOS) o se ejecutó el comando `net start geoserver` (en el caso de Windows) y se accedió a la interfaz web mediante un navegador, utilizando la URL `http://localhost:8080/geoserver`. Una vez dentro, se inició sesión con las credenciales por defecto (usuario: *admin*, contraseña: *geoserver*).
 
 2. **Creación de capas**: Dado que en la última práctica se había creado un espacio de trabajo y un almacén de datos (ambos llamados RXDET), se procedió a añadir las vistas como nuevas capas dentro del almacén de datos existente. Para ello, se seleccionó el almacén de datos RXDET y se hizo clic en "Agregar nueva capa". Se eligieron las vistas *vacas_dentro* y *vacas_fuera* una por una, configurando sus propiedades y estilos según fuera necesario.
 
