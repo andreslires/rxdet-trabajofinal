@@ -17,14 +17,14 @@ if not database_exists(engine.url):
 #Defining what happens when you request http://localhost:8000/geoms
 @router.get("/vacas_dentro")
 async def geoms(): 
-    sql = "SELECT vacas_dentro.geom FROM vacas_dentro"
+    sql = "SELECT vacas_dentro.geom, vacas_dentro.\"deviceName\" FROM vacas_dentro"
     geodf = gpd.read_postgis(text(sql), conn) 
     json_str = geodf.to_json() 
     return Response(content=json_str, media_type='application/json')
 
 @router.get("/vacas_fuera")
 async def geoms(): 
-    sql = "SELECT vacas_fuera.geom FROM vacas_fuera"
+    sql = "SELECT vacas_fuera.geom, vacas_fuera.\"deviceName\" FROM vacas_fuera"
     geodf = gpd.read_postgis(text(sql), conn) 
     json_str = geodf.to_json() 
     return Response(content=json_str, media_type='application/json')
