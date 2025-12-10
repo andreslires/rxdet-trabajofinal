@@ -30,10 +30,6 @@ WHERE NOT EXISTS (
 select * from vacas_fuera;
 select count(*) from vacas_fuera; -- 105
 
--- Con el objetivo de eliminar falsos positivos del resultado mostrado al cliente, sería
--- conveniente no tener en cuenta las posiciones de los animales que estén a menos de 15 metros de
--- una finca.
-
 -- Vista 3: Vacas fuera de fincas, considerando un buffer de 15 metros
 CREATE OR REPLACE VIEW vacas_fuera_buffer AS
 SELECT 
