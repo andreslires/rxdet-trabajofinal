@@ -32,6 +32,18 @@ var vacasdentro = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     transparent: true
 });
 
+var vacasfueraBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
+    layers: 'rxdet:vacas_fuera_buffer',
+    format: 'image/png',
+    transparent: true,
+});
+
+var vacasdentroBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
+    layers: 'rxdet:vacas_dentro_buffer',
+    format: 'image/png',
+    transparent: true
+});
+
 // ****************************************************************
 // **************Control con botones*******************************
 
@@ -60,6 +72,31 @@ document.getElementById('btnLimpiar').addEventListener('click', function() {
     }
     if (map.hasLayer(vacasfuera)) {
         map.removeLayer(vacasfuera);
+    }
+    if (map.hasLayer(vacasdentroBuffer)) {
+        map.removeLayer(vacasdentroBuffer);
+    }
+    if (map.hasLayer(vacasfueraBuffer)) {
+        map.removeLayer(vacasfueraBuffer);
+    }
+});
+
+// Botón Vacas Dentro Buffer
+document.getElementById('btnDentroBuffer').addEventListener('click', function() {
+    if (map.hasLayer(vacasdentroBuffer)) {
+        map.removeLayer(vacasdentroBuffer);
+    } else {
+        map.addLayer(vacasdentroBuffer);
+    }
+
+});
+
+// Botón Vacas Fuera Buffer
+document.getElementById('btnFueraBuffer').addEventListener('click', function() {
+    if (map.hasLayer(vacasfueraBuffer)) {
+        map.removeLayer(vacasfueraBuffer);
+    } else {
+        map.addLayer(vacasfueraBuffer);
     }
 });
 
