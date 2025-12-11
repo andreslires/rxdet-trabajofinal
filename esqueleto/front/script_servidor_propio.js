@@ -1,26 +1,52 @@
 // ****************************************************************
 // *****************Inicialización y capas base********************
 
-const map = L.map('map')
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
-map.setView([43.253, -7.34], 16);
+const esriSatLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+);
 
-// A PARTIR DE AQUI, MODIFICAR EL CÓDIGO
+const map = L.map('map');
+map.setView([43.253, -7.34], 16);
+map.addLayer(esriSatLayer);
+
+// ****************************************************************
+// **************Capa base: Mapa de Fontán*************************
+
+var wmsUrlFontan = 'https://ideg.xunta.gal/servizos/services/Raster/Fontan/MapServer/WmsServer?';
+
+var wmsOptionsFontan = {
+    layers: '0',
+    format: 'image/png',
+    transparent: true,
+    zIndex: 1,
+    version: '1.3.0',
+    crs: L.CRS.EPSG3857,
+    attribution: 'Carta Geométrica de Galicia - Domingo Fontán (Xunta de Galicia)'
+};
+
+var fontanLayer = L.tileLayer.wms(wmsUrlFontan, wmsOptionsFontan);
+fontanLayer.on('tileload', () => fontanLayer.bringToBack());
+
+var baseLayers = {
+    "Mapa Satélite": esriSatLayer,
+    "Mapa de Fontán": fontanLayer
+};
+
+L.control.layers(baseLayers).addTo(map);
 
 // ****************************************************************
 // **************VACAS: Dentro y fuera de las fincas***************
 
-// Se cargan desde un servidor propio
 async function load_geom(type_of_cows){
     let url = `http://localhost:8000/geoms/${type_of_cows}`;
-    const response = await fetch(url)
+    const response = await fetch(url);
     const my_geom = await response.json();
     return my_geom;
 }
 
 async function main(){
 
-    // Iconos personalizados para las vacas
+    // Iconos personalizados
     var vacaAIcon = L.icon({
         iconUrl: 'imagenes/vacaA.png',
         iconSize: [41, 30],
@@ -31,32 +57,29 @@ async function main(){
         iconSize: [41, 30],
     });
 
-    // Funciones para asignar los iconos según el deviceName
+    // Funciones de icono
     function marcadorVacaA(feature, latlng) {
         return L.marker(latlng, { icon: vacaAIcon });
     }
-
     function marcadorVacaB(feature, latlng) {
         return L.marker(latlng, { icon: vacaBIcon });
     }
 
     function styleCow(feature, latlng) {
-        // Si la primera letra de deviceName es A, usar vacaAIcon
         if (feature.properties.deviceName.startsWith('A')) {
             return marcadorVacaA(feature, latlng);
-        // Si la primera letra de deviceName es B, usar vacaBIcon
         } else if (feature.properties.deviceName.startsWith('B')) {
             return marcadorVacaB(feature, latlng);
         }
     }
 
-    // Popup que muestre el deviceName
+    // Popup
     function popupVaca(feature, layer) {
         var contenidoPopup = '<p>DeviceName: <b>' + feature.properties.deviceName + '</b></p>';
         layer.bindPopup(contenidoPopup);
     }
 
-    // Cargar las geometrías con la función anterior (load_geom) y crear las capas
+    // Datos desde servidor propio
     const vacas_dentro_geom = await load_geom("vacas_dentro");
     var vacas_dentro_layer = L.geoJson(vacas_dentro_geom, {
         onEachFeature: popupVaca,
@@ -69,17 +92,31 @@ async function main(){
         pointToLayer: styleCow
     });
 
-    // Cluster para vacas dentro
+    // Cluster
     var vacas_dentro_cluster = L.markerClusterGroup();
     vacas_dentro_cluster.addLayer(vacas_dentro_layer);
 
-    // Cluster para vacas fuera
     var vacas_fuera_cluster = L.markerClusterGroup();
     vacas_fuera_cluster.addLayer(vacas_fuera_layer);
 
-    // Añadir botones
-    // Botón Vacas Dentro
-    document.getElementById('btnDentro').addEventListener('click', function() {
+    // ===============================================================
+    // ======== UTILIDADES ===========================================
+    // ===============================================================
+
+    function normalesActivas() {
+        return map.hasLayer(vacas_dentro_cluster) || map.hasLayer(vacas_fuera_cluster);
+    }
+
+    function desactivarNormales() {
+        if (map.hasLayer(vacas_dentro_cluster)) map.removeLayer(vacas_dentro_cluster);
+        if (map.hasLayer(vacas_fuera_cluster)) map.removeLayer(vacas_fuera_cluster);
+    }
+
+    // ===============================================================
+    // ================= BOTONES DE CAPAS NORMALES ===================
+    // ===============================================================
+
+    document.getElementById('btnDentro').addEventListener('click', function () {
         if (map.hasLayer(vacas_dentro_cluster)) {
             map.removeLayer(vacas_dentro_cluster);
         } else {
@@ -87,8 +124,7 @@ async function main(){
         }
     });
 
-    // Botón Vacas Fuera
-    document.getElementById('btnFuera').addEventListener('click', function() {
+    document.getElementById('btnFuera').addEventListener('click', function () {
         if (map.hasLayer(vacas_fuera_cluster)) {
             map.removeLayer(vacas_fuera_cluster);
         } else {
@@ -96,16 +132,20 @@ async function main(){
         }
     });
 
-    // Botón Limpiar Capas
-    document.getElementById('btnLimpiar').addEventListener('click', function() {
-        if (map.hasLayer(vacas_dentro_cluster)) {
-            map.removeLayer(vacas_dentro_cluster);
-        }
-        if (map.hasLayer(vacas_fuera_cluster)) {
-            map.removeLayer(vacas_fuera_cluster);
-        }
+    // ===============================================================
+    // ====================== BOTÓN LIMPIAR ===========================
+    // ===============================================================
+
+    document.getElementById('btnLimpiar').addEventListener('click', function () {
+        desactivarNormales();
     });
 
 }
 
 main();
+
+// ****************************************************************
+// **************Escala********************************************
+
+var scaleControl = L.control.scale({ imperial: false });
+map.addControl(scaleControl);
