@@ -1,5 +1,5 @@
 // ****************************************************************
-// *********************Capas base*********************************
+// ********************Capa base: Satélite*************************
 
 var esriSatLayer = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -23,14 +23,15 @@ var wmsOptionsFontan = {
     layers: '0', 
     format: 'image/png',
     transparent: true,
-    zIndex: 1,
     version: '1.3.0',
     crs: L.CRS.EPSG3857,
     attribution: 'Carta Geométrica de Galicia - Domingo Fontán (Xunta de Galicia)'
 };
 
 var fontanLayer = L.tileLayer.wms(wmsUrlFontan, wmsOptionsFontan);
-fontanLayer.on('tileload', () => fontanLayer.bringToBack());
+fontanLayer.on('tileload', function() {
+    fontanLayer.bringToBack();
+});
 
 var baseLayers = {
     "Mapa Satélite": esriSatLayer,
@@ -54,6 +55,9 @@ var vacasdentro = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     transparent: true
 });
 
+// ****************************************************************
+// ************VACAS CON BUFFER: Dentro y fuera de las fincas******
+
 var vacasfueraBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     layers: 'rxdet:vacas_fuera_buffer',
     format: 'image/png',
@@ -66,9 +70,8 @@ var vacasdentroBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     transparent: true
 });
 
-// ===============================================================
-// ======== UTILIDADES ===========================================
-// ===============================================================
+// ****************************************************************
+// ********************Funciones auxiliares************************
 
 function normalesActivas() {
     return map.hasLayer(vacasdentro) || map.hasLayer(vacasfuera);
@@ -88,9 +91,8 @@ function desactivarBuffer() {
     if (map.hasLayer(vacasfueraBuffer)) map.removeLayer(vacasfueraBuffer);
 }
 
-// ===============================================================
-// ================= BOTONES DE CAPAS NORMALES ===================
-// ===============================================================
+// ****************************************************************
+// ***************** BOTONES DE CAPAS NORMALES *********************
 
 // Vacas Dentro
 document.getElementById('btnDentro').addEventListener('click', function () {
@@ -123,9 +125,8 @@ document.getElementById('btnFuera').addEventListener('click', function () {
 });
 
 
-// ===============================================================
-// ================== BOTONES DE CAPAS BUFFER ====================
-// ===============================================================
+// ****************************************************************
+// *************** BOTONES DE CAPAS CON BUFFER ********************
 
 // Vacas Dentro Buffer
 document.getElementById('btnDentroBuffer').addEventListener('click', function () {
@@ -158,9 +159,8 @@ document.getElementById('btnFueraBuffer').addEventListener('click', function () 
 });
 
 
-// ===============================================================
-// ====================== BOTÓN LIMPIAR ===========================
-// ===============================================================
+// ****************************************************************
+// ******************** BOTÓN LIMPIAR CAPAS ***********************
 
 document.getElementById('btnLimpiar').addEventListener('click', function () {
     desactivarNormales();
@@ -168,7 +168,7 @@ document.getElementById('btnLimpiar').addEventListener('click', function () {
 });
 
 // ****************************************************************
-// **************Escala********************************************
+// ************************Escala**********************************
 
 var scaleControl = L.control.scale({ imperial: false });
 map.addControl(scaleControl);

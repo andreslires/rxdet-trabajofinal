@@ -25,7 +25,9 @@ var wmsOptionsFontan = {
 };
 
 var fontanLayer = L.tileLayer.wms(wmsUrlFontan, wmsOptionsFontan);
-fontanLayer.on('tileload', () => fontanLayer.bringToBack());
+fontanLayer.on('tileload', function() {
+    fontanLayer.bringToBack();
+});
 
 var baseLayers = {
     "Mapa Satélite": esriSatLayer,
@@ -65,6 +67,7 @@ async function main(){
         return L.marker(latlng, { icon: vacaBIcon });
     }
 
+    // Estilo según el deviceName
     function styleCow(feature, latlng) {
         if (feature.properties.deviceName.startsWith('A')) {
             return marcadorVacaA(feature, latlng);
@@ -73,13 +76,13 @@ async function main(){
         }
     }
 
-    // Popup
+    // Popup con el DeviceName
     function popupVaca(feature, layer) {
         var contenidoPopup = '<p>DeviceName: <b>' + feature.properties.deviceName + '</b></p>';
         layer.bindPopup(contenidoPopup);
     }
 
-    // Datos desde servidor propio
+    // Datos desde servidor propio (llamando a la función load_geom definida arriba)
     const vacas_dentro_geom = await load_geom("vacas_dentro");
     var vacas_dentro_layer = L.geoJson(vacas_dentro_geom, {
         onEachFeature: popupVaca,
@@ -99,9 +102,8 @@ async function main(){
     var vacas_fuera_cluster = L.markerClusterGroup();
     vacas_fuera_cluster.addLayer(vacas_fuera_layer);
 
-    // ===============================================================
-    // ======== UTILIDADES ===========================================
-    // ===============================================================
+    // ****************************************************************
+    // ********************Funciones auxiliares************************
 
     function normalesActivas() {
         return map.hasLayer(vacas_dentro_cluster) || map.hasLayer(vacas_fuera_cluster);
@@ -112,9 +114,8 @@ async function main(){
         if (map.hasLayer(vacas_fuera_cluster)) map.removeLayer(vacas_fuera_cluster);
     }
 
-    // ===============================================================
-    // ================= BOTONES DE CAPAS NORMALES ===================
-    // ===============================================================
+    // ****************************************************************
+    // ***************** BOTONES DE CAPAS NORMALES *********************
 
     document.getElementById('btnDentro').addEventListener('click', function () {
         if (map.hasLayer(vacas_dentro_cluster)) {
@@ -132,9 +133,8 @@ async function main(){
         }
     });
 
-    // ===============================================================
-    // ====================== BOTÓN LIMPIAR ===========================
-    // ===============================================================
+    // ****************************************************************
+    // ******************** BOTÓN LIMPIAR CAPAS ***********************
 
     document.getElementById('btnLimpiar').addEventListener('click', function () {
         desactivarNormales();
@@ -145,7 +145,7 @@ async function main(){
 main();
 
 // ****************************************************************
-// **************Escala********************************************
+// ************************Escala**********************************
 
 var scaleControl = L.control.scale({ imperial: false });
 map.addControl(scaleControl);
