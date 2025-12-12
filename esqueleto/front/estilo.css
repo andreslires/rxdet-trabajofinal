@@ -27,3 +27,33 @@ html, body {
   margin-bottom: 10px;
   width: 80%;
 }
+
+/* Vacas Dentro */
+#btnDentro {
+  background-color: #28a745;
+  color: white;
+}
+
+/* Vacas Fuera */
+#btnFuera {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Vacas Dentro Buffer */
+#btnDentroBuffer {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Vacas Fuera Buffer */
+#btnFueraBuffer {
+  background-color: #b34fec;
+  color: white;
+}
+
+/* Limpiar */
+#btnLimpiar {
+  background-color: #6c757d;
+  color: white;
+}

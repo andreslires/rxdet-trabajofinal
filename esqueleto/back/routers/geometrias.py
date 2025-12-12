@@ -28,3 +28,17 @@ async def geoms():
     geodf = gpd.read_postgis(text(sql), conn) 
     json_str = geodf.to_json() 
     return Response(content=json_str, media_type='application/json')
+
+@router.get("/vacas_dentro_buffer")
+async def geoms():
+    sql = 'SELECT vacas_dentro_buffer.geom, vacas_dentro_buffer."deviceName" FROM vacas_dentro_buffer'
+    geodf = gpd.read_postgis(text(sql), conn)
+    json_str = geodf.to_json()
+    return Response(content=json_str, media_type='application/json')
+
+@router.get("/vacas_fuera_buffer")
+async def geoms():
+    sql = 'SELECT vacas_fuera_buffer.geom, vacas_fuera_buffer."deviceName" FROM vacas_fuera_buffer'
+    geodf = gpd.read_postgis(text(sql), conn)
+    json_str = geodf.to_json()
+    return Response(content=json_str, media_type='application/json')
