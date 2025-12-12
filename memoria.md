@@ -93,3 +93,37 @@ A continuación, para mostrar las capas se crearon 3 archivos para el *frontend*
 
 ## Creación del servidor propio
 
+Para la creación del servidor propio, se utilizaron dos archivos principales: `main.py` y `geometrias.py`.
+
+- **Archivo `main.py`**: Este archivo contiene la configuración principal del servidor utilizando *FastAPI*. Se definen las rutas base de *localhost* y se incluye el enrutador de geometrias para gestionar las solicitudes relacionadas con las geometrías de las vacas. También se configura el middleware de CORS para permitir solicitudes desde cualquier origen, credenciales, métodos y encabezados. Por último, se incluye en el enrutador el archivo `geometrias.py` y se hace una prueba de GET en la ruta raíz para verificar que el servidor está funcionando correctamente.
+
+- **Archivo `geometrias.py`**: En este archivo primeramente se configura la ruta base y se realiza la conexión a la base de datos PostGres utilizando *SQLAlchemy*. Por último, se definen las rutas para obtener las vacas dentro y fuera de las fincas, ejecutando las consultas SQL correspondientes y devolviendo los resultados en formato GeoJSON.
+
+## Visualización de las capas del servidor propio
+
+Para mostrar las capas del servidor propio, se creó un nuevo archivo .js, ya que el archivo .html y .css se van a reutilizar, simplemente cambiando en el .html la referencia al archivo .js correspondiente. Los aspectos que cambian respecto al archivo .js anterior son los siguientes:
+
+- **Carga de capas**: En lugar de utilizar capas WMS de GeoServer, se emplean capas GeoJSON que se obtienen mediante solicitudes *fetch* a las rutas definidas en el servidor propio. Esta acción se realiza en una función asíncrona *load_geom*, a la que hay que pasar como parámetro la URL de la ruta correspondiente (ya sea para las vacas dentro o fuera de las fincas). Una vez obtenidos los datos, se crean las capas correspondientes utilizando *L.geoJSON* de Leaflet y se gestionan los eventos de los botones para activar o desactivar la visualización de estas capas en el mapa.
+
+- **Diferenciación de tipo de vacas**: Para diferenciar visualmente las vacas cuyo *deviceName* empieza por A de las que empiezan por B, en primer lugar se crean unos iconos personalizados con *L.icon*, definiendo la ruta de la imagen y el tamaño. A continuación, se crean dos marcadores y una función *styleCow* que asigna el icono correspondiente según cómo comienza el *deviceName* de cada vaca. Esta función se pasa como parámetro a la función *L.geoJSON* al crear las capas, para que cada vaca se muestre con el icono adecuado.
+Por último, también se pasa como párametro la función *popupVaca*, que crea un *popup* con el *deviceName* de cada vaca al hacer clic sobre ella.
+
+- **Clustering**: Para mejorar la visualización de las vacas en el mapa y hacerla más eficiente, se implementa el *clustering* utilizando la librería *Leaflet.markercluster*. En lugar de crear las capas directamente con *L.geoJSON*, se crea un *markerClusterGroup* y se añaden los marcadores correspondientes a este grupo. Finalmente, se añade el grupo al mapa.
+
+## Vacas con margen de error (buffers)
+
+Para implementar las capas de vacas con margen de error (buffers) en la visualización empleando **Geoserver**, se siguieron los siguientes pasos:
+
+1. **Creación de vistas con buffers**: Se crearon dos nuevas vistas (*vacas_dentro_buffer* y *vacas_fuera_buffer*) en PostGIS que incluyen un buffer de 15 metros alrededor de cada vaca, utilizando la función espacial *ST_DWithin*, y para poder calcular distancias en metros se transformaron las geometrías al sistema de referencia EPSG:25829, ya que el EPSG:4326 utiliza grados decimales.
+
+2. **Publicación en GeoServer**: Se añadieron las nuevas vistas como capas en GeoServer, siguiendo el mismo procedimiento que para las capas sin buffers. Se definieron los mismos estilos que para las capas originales.
+
+3. **Visualización en el visor web**: Se modificó el archivo .js del visor web para incluir las nuevas capas de buffers, cargándolas de la misma forma que las capas originales. Se añadieron nuevos botones para activar o desactivar la visualización de las capas *vacas_dentro_buffer* y *vacas_fuera_buffer*, gestionando los eventos correspondientes para cargar y mostrar estas capas en el mapa. Estos eventos incluyeron una nueva lógica para evitar que se puedan activar capas normales y de buffer al mismo tiempo, mostrando una alerta en caso de que el usuario intente hacerlo.
+
+En el caso de la visualización empleando el **servidor propio**, se siguieron pasos similares:
+
+1. **Creación de rutas para buffers**: Se añadieron dos nuevas rutas en el archivo `geometrias.py` para obtener las vacas dentro y fuera de las fincas con buffers, ejecutando las consultas SQL correspondientes y devolviendo los resultados en formato GeoJSON.
+
+2. **Modificación del visor web**: Se modificó el archivo .js para el visor web que incluye las nuevas capas de buffers, cargándolas de la misma forma que las capas originales. Se añadieron nuevos botones para activar o desactivar la visualización de las capas *vacas_dentro_buffer* y *vacas_fuera_buffer*, gestionando los eventos correspondientes para cargar y mostrar estas capas en el mapa. Al igual que en el caso de GeoServer, se implementó una lógica para evitar que se puedan activar capas normales y de buffer al mismo tiempo, mostrando una alerta en caso de que el usuario intente hacerlo.
+
+## Mapa de Fontán
