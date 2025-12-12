@@ -16,11 +16,7 @@ var wmsUrlFontan = 'https://ideg.xunta.gal/servizos/services/Raster/Fontan/MapSe
 
 var wmsOptionsFontan = {
     layers: '0',
-    format: 'image/png',
-    transparent: true,
-    zIndex: 1,
-    version: '1.3.0',
-    crs: L.CRS.EPSG3857,
+    format: 'image/jpeg',
     attribution: 'Carta Geométrica de Galicia - Domingo Fontán (Xunta de Galicia)'
 };
 
@@ -48,6 +44,7 @@ async function load_geom(type_of_cows){
 
 async function main(){
 
+    // Iconos personalizados para las vacas
     var vacaAIcon = L.icon({
         iconUrl: 'imagenes/vacaA.png',
         iconSize: [41, 30],
@@ -58,6 +55,7 @@ async function main(){
         iconSize: [41, 30],
     });
 
+    // Funciones para asignar iconos según el tipo de vaca
     function marcadorVacaA(feature, latlng) {
         return L.marker(latlng, { icon: vacaAIcon });
     }
@@ -74,11 +72,15 @@ async function main(){
         }
     }
 
+    // Popup con el DeviceName
     function popupVaca(feature, layer) {
         var contenidoPopup = '<p>DeviceName: <b>' + feature.properties.deviceName + '</b></p>';
         layer.bindPopup(contenidoPopup);
     }
 
+    // Datos desde el servidor propio (llamando a la función load_geom definida arriba)
+
+    //  Vacas dentro y fuera de las fincas
     const vacas_dentro_geom = await load_geom("vacas_dentro");
     var vacas_dentro_layer = L.geoJson(vacas_dentro_geom, {
         onEachFeature: popupVaca,
@@ -91,6 +93,7 @@ async function main(){
         pointToLayer: styleCow
     });
 
+    // Vacas dentro y fuera con buffer
     const vacas_dentro_buffer_geom = await load_geom("vacas_dentro_buffer");
     var vacas_dentro_buffer_layer = L.geoJson(vacas_dentro_buffer_geom, {
         onEachFeature: popupVaca,
@@ -103,6 +106,7 @@ async function main(){
         pointToLayer: styleCow
     });
 
+    // Clústeres para las capas de vacas
     var vacas_dentro_cluster = L.markerClusterGroup();
     vacas_dentro_cluster.addLayer(vacas_dentro_layer);
 

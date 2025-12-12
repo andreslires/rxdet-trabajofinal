@@ -39,7 +39,7 @@ En cuanto al segundo archivo, *fincas.json*, se cargó en un *GeoDataFrame* de g
 
 # Carga de datos en la BD
 
-Para la carga de datos de las dos tablas en la base de datos PostGIS, existían varias opciones como usar QGIS, crear el esquema de la base de datos y cargar los datos directamente en DBeaver, o cargarlos mediante comandos en la terminal. Se optó por la solución que a priori parecía más sencilla y rápida: cargar los datos mediante código en *Python*.
+Para la carga de datos de las dos tablas en la base de datos PostGIS, existían varias opciones como usar QGIS, crear el esquema de la base de datos y cargar los datos directamente en DBeaver, o cargarlos mediante comandos en la terminal. Se optó por cargar los datos mediante código en *Python*.
 
 Para realizar dicha carga, se utilizó la librería *SQLAlchemy* para gestionar la conexión con la base de datos. En primer lugar, se creó un motor de conexión utilizando la función *create_engine*, proporcionando la URL de conexión a la base de datos. A continuación, se empleó el método *to_postgis* de geopandas para cargar los *GeoDataFrames* previamente creados en la base de datos. Este método permite especificar el nombre de la tabla destino, el motor de conexión y la opción de reemplazar la tabla existente. A continuación, se realizó una comprobación empleando la función *read_postgis* de geopandas para asegurarse de que el número de filas y columnas en las tablas de la base de datos coincidía con el número de filas y columnas en los *GeoDataFrames* originales.
 
@@ -51,23 +51,7 @@ En esta sección se describirán los pasos posteriores a la carga en la base de 
 
 ## Consultas de separación de vacas
 
-Una vez se han cargado los datos en PostGIS, el siguiente paso es crear las consultas necesarias para diferenciar las vacas que están dentro de las fincas de las que están fuera. Para ello, se crean dos vistas para que estas puedan ser consultadas posteriormente desde GeoServer y el servidor propio, que tienen la forma siguiente:
-
-```sql
-CREATE OR REPLACE VIEW vacas_dentro AS
-SELECT v.*
-FROM cows_pos v
-INNER JOIN fincas f ON ST_Within(v.geometry, f.geometry);
-```
-
-```sql
-CREATE OR REPLACE VIEW vacas_fuera AS
-SELECT v.*,
-FROM cows_pos v
-WHERE NOT EXISTS (
-  SELECT * FROM fincas f 
-    WHERE ST_Within(v.geometry, f.geometry));
-```
+Una vez se han cargado los datos en PostGIS, el siguiente paso es crear las consultas necesarias para diferenciar las vacas que están dentro y fuera de las fincas. Para ello, se crean dos vistas que pueden ser consultadas posteriormente desde GeoServer y el servidor propio. Se pueden observar en el archivo `consultas.sql`.
 
 Como se aprecia en las consultas, se utiliza la función espacial *ST_Within* y el *INNER JOIN* para determinar si una vaca está dentro de una finca. En la segunda consulta, se utiliza una subconsulta con *NOT EXISTS* para seleccionar las vacas que no están dentro de ninguna finca.
 
@@ -95,26 +79,27 @@ A continuación, para mostrar las capas se crearon 3 archivos para el *frontend*
 
 Para la creación del servidor propio, se utilizaron dos archivos principales: `main.py` y `geometrias.py`.
 
-- **Archivo `main.py`**: Este archivo contiene la configuración principal del servidor utilizando *FastAPI*. Se definen las rutas base de *localhost* y se incluye el enrutador de geometrias para gestionar las solicitudes relacionadas con las geometrías de las vacas. También se configura el middleware de CORS para permitir solicitudes desde cualquier origen, credenciales, métodos y encabezados. Por último, se incluye en el enrutador el archivo `geometrias.py` y se hace una prueba de GET en la ruta raíz para verificar que el servidor está funcionando correctamente.
+- **Archivo `main.py`**: Este archivo contiene la configuración principal del servidor utilizando *FastAPI*. Se definen las rutas base de *localhost* y se incluye el enrutador de geometrias para gestionar las solicitudes relacionadas con las geometrías de las vacas. No ha sido necesario realizar ningún cambio respecto al publicado en el campus virtual.
 
 - **Archivo `geometrias.py`**: En este archivo primeramente se configura la ruta base y se realiza la conexión a la base de datos PostGres utilizando *SQLAlchemy*. Por último, se definen las rutas para obtener las vacas dentro y fuera de las fincas, ejecutando las consultas SQL correspondientes y devolviendo los resultados en formato GeoJSON.
 
 ## Visualización de las capas del servidor propio
 
-Para mostrar las capas del servidor propio, se creó un nuevo archivo .js, ya que el archivo .html y .css se van a reutilizar, simplemente cambiando en el .html la referencia al archivo .js correspondiente. Los aspectos que cambian respecto al archivo .js anterior son los siguientes:
+Para mostrar las capas del servidor propio, se creó un nuevo script, para poder reutilizar el mismo mapa.html y estilo.css, simplemente cambiando en el .html la referencia al script correspondiente. Los aspectos que cambian respecto al archivo .js anterior son los siguientes:
 
 - **Carga de capas**: En lugar de utilizar capas WMS de GeoServer, se emplean capas GeoJSON que se obtienen mediante solicitudes *fetch* a las rutas definidas en el servidor propio. Esta acción se realiza en una función asíncrona *load_geom*, a la que hay que pasar como parámetro la URL de la ruta correspondiente (ya sea para las vacas dentro o fuera de las fincas). Una vez obtenidos los datos, se crean las capas correspondientes utilizando *L.geoJSON* de Leaflet y se gestionan los eventos de los botones para activar o desactivar la visualización de estas capas en el mapa.
 
-- **Diferenciación de tipo de vacas**: Para diferenciar visualmente las vacas cuyo *deviceName* empieza por A de las que empiezan por B, en primer lugar se crean unos iconos personalizados con *L.icon*, definiendo la ruta de la imagen y el tamaño. A continuación, se crean dos marcadores y una función *styleCow* que asigna el icono correspondiente según cómo comienza el *deviceName* de cada vaca. Esta función se pasa como parámetro a la función *L.geoJSON* al crear las capas, para que cada vaca se muestre con el icono adecuado.
+- **Diferenciación de tipo de vacas**: Para diferenciar visualmente las vacas cuyo *deviceName* empieza por A de las que empiezan por B, en primer lugar se crean unos iconos personalizados con *L.icon*, definiendo la ruta de la imagen representativa de cada tipo y el tamaño. A continuación, se crean dos marcadores y una función *styleCow* que asigna el icono correspondiente según cómo comienza el *deviceName* de cada vaca. Esta función se pasa como parámetro a la función *L.geoJSON* al crear las capas, para que cada vaca se muestre con el icono adecuado.
 Por último, también se pasa como párametro la función *popupVaca*, que crea un *popup* con el *deviceName* de cada vaca al hacer clic sobre ella.
+Es importante destacar que para poder realizar esta diferenciación, ha sido necesario modificar las consultas SQL en las rutas del servidor propio para que devuelvan también la columna *deviceName* y no solo la geometría.
 
-- **Clustering**: Para mejorar la visualización de las vacas en el mapa y hacerla más eficiente, se implementa el *clustering* utilizando la librería *Leaflet.markercluster*. En lugar de crear las capas directamente con *L.geoJSON*, se crea un *markerClusterGroup* y se añaden los marcadores correspondientes a este grupo. Finalmente, se añade el grupo al mapa.
+- **Clustering**: Para mejorar la visualización de las vacas en el mapa y hacerla más eficiente, se implementa el *clustering* utilizando la librería *Leaflet.markercluster*. Se crean las capas de vacas dentro y fuera de las fincas como antes, pero en lugar de añadirlas directamente al mapa, se crean grupos de clústeres con *L.markerClusterGroup* y se añaden las capas de vacas a estos grupos. Estos grupos son los que se añadirán al mapa al activar los botones correspondientes. 
 
 ## Vacas con margen de error (buffers)
 
 Para implementar las capas de vacas con margen de error (buffers) en la visualización empleando **Geoserver**, se siguieron los siguientes pasos:
 
-1. **Creación de vistas con buffers**: Se crearon dos nuevas vistas (*vacas_dentro_buffer* y *vacas_fuera_buffer*) en PostGIS que incluyen un buffer de 15 metros alrededor de cada vaca, utilizando la función espacial *ST_DWithin*, y para poder calcular distancias en metros se transformaron las geometrías al sistema de referencia EPSG:25829, ya que el EPSG:4326 utiliza grados decimales.
+1. **Creación de vistas con buffers**: Se crearon dos nuevas vistas (*vacas_dentro_buffer* y *vacas_fuera_buffer*) en PostGIS que incluyen un buffer de 15 metros alrededor de cada vaca, utilizando la función espacial *ST_DWithin*, y para poder calcular distancias en metros se transformaron las geometrías al sistema de referencia EPSG:25829, ya que el EPSG:4326 utiliza grados decimales. El archivo `consultas.sql`se modificó con las consultas correspondientes.
 
 2. **Publicación en GeoServer**: Se añadieron las nuevas vistas como capas en GeoServer, siguiendo el mismo procedimiento que para las capas sin buffers. Se definieron los mismos estilos que para las capas originales.
 
@@ -126,4 +111,16 @@ En el caso de la visualización empleando el **servidor propio**, se siguieron p
 
 2. **Modificación del visor web**: Se modificó el archivo .js para el visor web que incluye las nuevas capas de buffers, cargándolas de la misma forma que las capas originales. Se añadieron nuevos botones para activar o desactivar la visualización de las capas *vacas_dentro_buffer* y *vacas_fuera_buffer*, gestionando los eventos correspondientes para cargar y mostrar estas capas en el mapa. Al igual que en el caso de GeoServer, se implementó una lógica para evitar que se puedan activar capas normales y de buffer al mismo tiempo, mostrando una alerta en caso de que el usuario intente hacerlo.
 
+El archivo común mapa.html también fue modificado para adaptarse a estas nuevas capas, añadiendo los botones necesarios para su activación y desactivación.
+
 ## Mapa de Fontán
+
+El último requisito consistía en añadir como mapa base la Carta Geométrica de Galicia de Domingo Fontán. Para ello, se utilizaron los servicios WMS disponibles en la [web oficial de la Xunta de Galicia](https://www.xunta.gal/servizos/mapas-wms-wmts), que permiten acceder a este mapa. Para implementarlo en ambos visores web (tanto el de GeoServer como el del servidor propio), se editaron los archivos .js correspondientes, creando una nueva capa con la función *L.tileLayer.wms*, especificando la URL del servicio WMS y algunos parámetros necesarios. Esta capa no se añadió al mapa por defecto, sino que se dejó disponible para que el usuario pueda activarla o desactivarla según sus preferencias.
+
+Debido a algunos problemas de visualización que surgieron, fue necesario emplear funciones *bringToFront()* en las capas de vacas en el visor de GeoServer para asegurarse de que siempre se mostraran por encima del mapa base de Fontán. 
+
+# Capturas de los visores web
+
+![Visor web funcionando con GeoServer](imagenes/visor_geoserver.png)
+
+![Visor web funcionando con servidor propio](imagenes/visor_servidor_propio.png)

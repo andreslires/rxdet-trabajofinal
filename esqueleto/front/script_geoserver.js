@@ -17,14 +17,11 @@ map.addLayer(esriSatLayer);
 // ****************************************************************
 // **************Capa base: Mapa de Fontán*************************
 
-var wmsUrlFontan = 'https://ideg.xunta.gal/servizos/services/Raster/Fontan/MapServer/WmsServer?'; 
+var wmsUrlFontan = 'https://ideg.xunta.gal/servizos/services/Raster/Fontan/MapServer/WmsServer?';
 
 var wmsOptionsFontan = {
-    layers: '0', 
-    format: 'image/png',
-    transparent: true,
-    version: '1.3.0',
-    crs: L.CRS.EPSG3857,
+    layers: '0',
+    format: 'image/jpeg',
     attribution: 'Carta Geométrica de Galicia - Domingo Fontán (Xunta de Galicia)'
 };
 
@@ -49,10 +46,18 @@ var vacasfuera = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     transparent: true,
 });
 
+vacasfuera.on('tileload', function() {
+    vacasfuera.bringToFront();
+});
+
 var vacasdentro = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     layers: 'rxdet:vacas_dentro',
     format: 'image/png',
     transparent: true
+});
+
+vacasdentro.on('tileload', function() {
+    vacasdentro.bringToFront();
 });
 
 // ****************************************************************
@@ -64,10 +69,18 @@ var vacasfueraBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     transparent: true,
 });
 
+vacasfueraBuffer.on('tileload', function() {
+    vacasfueraBuffer.bringToFront();
+});
+
 var vacasdentroBuffer = L.tileLayer.wms('http://localhost:8080/geoserver/wms', {
     layers: 'rxdet:vacas_dentro_buffer',
     format: 'image/png',
     transparent: true
+});
+
+vacasdentroBuffer.on('tileload', function() {
+    vacasdentroBuffer.bringToFront();
 });
 
 // ****************************************************************
