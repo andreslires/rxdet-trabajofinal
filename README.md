@@ -27,6 +27,7 @@ Andres_Lires_Angel_Vilarino/
 │   │   ├── script_servidor_propio.js
 ├── preprocess.ipynb
 ├── memoria.pdf
+├── requirements.txt
 └── README.md
 ```
 
@@ -37,7 +38,7 @@ Para más información sobre la implementación, consulte el archivo `memoria.pd
 ### Configuración inicial
 
 Toda la práctica ha sido desarrollada y ejecutada utilizando el entorno virtual GEOPANDAS25 e 
-instalando las librerías necesarias conforme se ha ido avanzando.
+instalando las librerías necesarias conforme se ha ido avanzando. Se puede consultar el archivo `requirements.txt` para instalar las dependencias en las versiones utilizadas en el desarrollo.
 
 Los archivos `fincas.json`y `cows_pos.csv` no se han adjuntado en la entrega. En caso de querer recrear el proceso completo se deben situar en una carpeta `archivos/` dentro del directorio raíz. Con la ejecución de las celdas del *Notebook* `preprocess.ipynb` se generarán los archivos correspondientes a las limpiezas y transformaciones.
 
